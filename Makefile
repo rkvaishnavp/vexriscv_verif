@@ -1,8 +1,8 @@
 # Makefile for VexRiscv RTL dependencies and build
 
 # Default target
-.PHONY: all deps rtl-build clean
-all: deps rtl-build
+.PHONY: all deps rtl-gen clean
+all: deps rtl-gen
 
 # -----------------------------
 # Dependencies: Java + sbt
@@ -22,7 +22,7 @@ deps:
 # -----------------------------
 # RTL generation
 # -----------------------------
-rtl-build:
+rtl-gen:
 	@echo "=== Generating RTL ==="
 	cd VexRiscv && sbt "runMain vexriscv.demo.GenFull" && cd ..
 
@@ -31,4 +31,4 @@ rtl-build:
 # -----------------------------
 clean:
 	@echo "=== Cleaning project ==="
-	sbt clean
+sbt clean
