@@ -31,4 +31,4 @@ rtl-gen:
 # -----------------------------
 clean:
 	@echo "=== Cleaning project ==="
-sbt clean
+	cd VexRiscv && sbt clean && cd ..
