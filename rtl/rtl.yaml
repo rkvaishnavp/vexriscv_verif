@@ -1,1 +1,3 @@
 RTL
+  - VexRiscv/VexRiscv.sv
+  - VexRiscv_wrapper.sv

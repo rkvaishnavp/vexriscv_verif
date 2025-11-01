@@ -3,6 +3,7 @@
 module VexRiscv_wrapper (
     input clk,
     input reset,
+    input debugReset,
     dBus_if.proc dBus,
     iBus_if.proc iBus,
     debugBus_if.proc debugBus,
@@ -34,6 +35,7 @@ module VexRiscv_wrapper (
       .debug_bus_cmd_payload_address(debugBus.cmd_payload_address),
       .debug_bus_cmd_payload_data(debugBus.cmd_payload_data),
       .debug_bus_rsp_data(debugBus.rsp_data),
+      .debug_resetOut(debugBus.resetOut),
       .iBus_cmd_valid(iBus.cmd_valid),
       .iBus_cmd_ready(iBus.cmd_ready),
       .iBus_cmd_payload_address(iBus.cmd_payload_address),
@@ -41,7 +43,7 @@ module VexRiscv_wrapper (
       .iBus_rsp_valid(iBus.rsp_valid),
       .iBus_rsp_payload_data(iBus.rsp_payload_data),
       .iBus_rsp_payload_error(iBus.rsp_payload_error),
-      .debugReset(debugBus.reset)
+      .debugReset(debugReset)
   );
 
 endmodule
