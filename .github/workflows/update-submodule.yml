@@ -15,14 +15,18 @@ jobs:
           submodules: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update submodules to latest commit
+      - name: Update rtl/VexRiscv submodule to latest commit
         run: |
-          git submodule update --remote --merge
+          cd rtl/VexRiscv
+          git fetch origin
+          git checkout main || git checkout master || true
+          git pull origin $(git branch --show-current)
+          cd ../../
+          git add rtl/VexRiscv
           if [ -n "$(git status --porcelain)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add .
-            git commit -m "Auto-update VexRiscv submodule to latest"
+            git commit -m "Auto-update rtl/VexRiscv submodule to latest"
             git push
           else
             echo "No submodule updates found."
