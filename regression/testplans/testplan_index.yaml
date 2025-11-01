@@ -1,0 +1,10 @@
+testplans:
+  - file: arch_testplan.yaml
+  - file: interrupt_testplan.yaml
+  - file: debug_testplan.yaml
+  - file: memory_testplan.yaml
+  - file: microarch_testplan.yaml
+  - file: integration_testplan.yaml
+  - file: performance_testplan.yaml
+  - file: compliance_testplan.yaml
+  - file: error_injection_testplan.yaml

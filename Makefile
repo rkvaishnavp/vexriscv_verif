@@ -58,7 +58,7 @@ rtl-gen:
 # -----------------------------
 whisper:
 	@echo "=== [Whisper] Building Tenstorrent Whisper ==="
-	@sudo apt-get install -y g++-11 build-essential libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev > /dev/null 2>&1 || true
+	sudo apt-get install -y g++-11 build-essential libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev
 	@if [ -d "tools/whisper" ]; then \
 		cd tools/whisper && make BOOST_DIR=/usr; \
 	else \
@@ -114,7 +114,7 @@ style-check:
 clean:
 	@echo "=== [Clean] Removing artifacts ==="
 	@if [ -d "rtl/VexRiscv" ]; then cd rtl/VexRiscv && sbt clean; fi
-	@if [ -d "tools/whisper/build" ]; then rm -rf tools/whisper/build; fi
+	@if [ -d "tools/whisper/build" ]; then rm -rf tools/whisper/build-Linux; fi
 	@if [ -d "tests/generated" ]; then rm -rf tests/generated; fi
 	@echo "=== [Clean] Done ==="
 
