@@ -38,7 +38,6 @@ VERIF:
   
   TESTS:
     - verif/tests/VexRiscv_base_test.sv
-    - verif/tests/vexRiscv_base_test.sv
   
   TESTPLANS:
     - verif/testplans/testplan_index.yaml

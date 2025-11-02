@@ -46,8 +46,8 @@ module tb_top;
     $display("Starting Testbench Top Module");
     uvm_config_db#(virtual dBus_if)::set(null, "uvm_test_top.env.dbus_agent*", "vif", dbus_if);
     uvm_config_db#(virtual iBus_if)::set(null, "uvm_test_top.env.ibus_agent*", "vif", ibus_if);
-    uvm_config_db#(virtual intrBus_if)::set(null, "uvm_test_top.env.intr_agent*", "vif",
-                                            intrbus_if);
+    uvm_config_db#(virtual intrBus_if.drv)::set(null, "uvm_test_top.env.intr_agent*", "vif",
+                                                intrbus_if);
     uvm_config_db#(virtual debugBus_if)::set(null, "uvm_test_top.env.debug_agent*", "vif",
                                              debugbus_if);
     run_test("VexRiscv_base_test");
