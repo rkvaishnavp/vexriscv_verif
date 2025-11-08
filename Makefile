@@ -2,18 +2,18 @@
 # Makefile for VexRiscv Verification Framework
 # Includes RTL, Whisper, and RISC-V DV integration
 # Author: Vaishnav RKV
-# Updated: 2025-11-01
+# Updated: 2025-11-08
 # ==========================================================
 
 .PHONY: all deps rtl-gen whisper riscv-dv riscv-dv-gen style-check clean check help
 
 # -----------------------------
-# Default target
+# [1] Default target
 # -----------------------------
 all: deps rtl-gen
 
 # -----------------------------
-# [1] Dependencies: Java + sbt + Python + Build Tools
+# [2] Dependencies: Java + sbt + Python + Build Tools
 # -----------------------------
 deps:
 	@echo "=== [Deps] Checking dependencies ==="
@@ -41,7 +41,7 @@ deps:
 	@echo "=== [Deps] Done ==="
 
 # -----------------------------
-# [2] RTL generation
+# [3] RTL generation
 # -----------------------------
 rtl-gen:
 	@echo "=== [RTL] Generating VexRiscv RTL ==="
@@ -53,22 +53,21 @@ rtl-gen:
 	fi
 	@echo "=== [RTL] Generation complete ==="
 
-# -----------------------------
-# [3] Tenstorrent Whisper build
-# -----------------------------
 whisper:
 	@echo "=== [Whisper] Building Tenstorrent Whisper ==="
-	sudo apt-get install -y g++-11 build-essential libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev
+	sudo apt-get install -y g++-11 build-essential libc6-dev libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev
 	@if [ -d "tools/whisper" ]; then \
-		cd tools/whisper && make BOOST_DIR=/usr; \
+		echo "[INFO] Using g++-11 for build"; \
+		# 👇 Remove broken include paths before compiling
+		sed -i 's|-isystem /usr ||g; s|-isystem /usr/include ||g' tools/whisper/GNUmakefile; \
+		cd tools/whisper && make CXX=g++-11 BOOST_DIR=/usr; \
 	else \
 		echo "[ERROR] tools/whisper not found. Run: git submodule update --init --recursive"; \
 		exit 1; \
 	fi
-	@echo "=== [Whisper] Build complete ==="
 
 # -----------------------------
-# [4] ChipsAlliance RISC-V DV setup
+# [5] ChipsAlliance RISC-V DV setup
 # -----------------------------
 riscv-dv:
 	@echo "=== [RISCV-DV] Installing dependencies ==="
@@ -83,7 +82,7 @@ riscv-dv:
 	@echo "=== [RISCV-DV] Installation complete ==="
 
 # -----------------------------
-# [5] Generate RISC-V DV random tests (generation only)
+# [6] Generate RISC-V DV random tests (generation only)
 # -----------------------------
 riscv-dv-gen:
 	@echo "=== [RISCV-DV] Generating random instruction tests ==="
@@ -102,10 +101,10 @@ riscv-dv-gen:
 	@echo "=== [RISCV-DV] Test generation complete ==="
 
 # -----------------------------
-# [6] Verilog style check using Verible
+# [7] Verilog style check using Verible
 # -----------------------------
 style-check:
-	@echo "=== [RISCV-DV] Running Verilog style check ==="
+	@echo "=== [Style] Running Verilog style check ==="
 	@if [ -d "tools/riscv-dv" ]; then \
 		cd tools/riscv-dv/verilog_style && ./build-verible.sh && ./run.sh; \
 	else \
@@ -115,17 +114,17 @@ style-check:
 	@echo "=== [Style] Verilog style check complete ==="
 
 # -----------------------------
-# [7] Clean
+# [8] Clean
 # -----------------------------
 clean:
 	@echo "=== [Clean] Removing artifacts ==="
 	@if [ -d "rtl/VexRiscv" ]; then cd rtl/VexRiscv && sbt clean; fi
-	@if [ -d "tools/whisper/build" ]; then rm -rf tools/whisper/build-Linux; fi
+	@if [ -d "tools/whisper/build-Linux" ]; then rm -rf tools/whisper/build-Linux; fi
 	@if [ -d "tests/generated" ]; then rm -rf tests/generated; fi
 	@echo "=== [Clean] Done ==="
 
 # -----------------------------
-# [8] Environment check
+# [9] Environment check
 # -----------------------------
 check:
 	@echo "=== [Check] Toolchain Summary ==="
@@ -138,7 +137,7 @@ check:
 	@echo "=== [Check] Done ==="
 
 # -----------------------------
-# [9] Help
+# [10] Help
 # -----------------------------
 help:
 	@echo "=========================================================="

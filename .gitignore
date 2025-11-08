@@ -47,8 +47,7 @@ __pycache__/
 # ----------------------------------------
 # RISC-V DV Generated Files
 # ----------------------------------------
-/tests/generated/
-/regression/tests/generated/
+/regression/testcases/generated/
 /tools/riscv-dv/.pytest_cache/
 /tools/riscv-dv/__pycache__/
 /tools/riscv-dv/build/
