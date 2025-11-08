@@ -5,10 +5,10 @@
 
 project:
   name: VexRiscv Verification Framework
-  description: RTL, Whisper, and RISC-V DV integration
+  description: Verification Framework for Verification of VexRiscv using Whisper and RISC-V DV
 
 tasks:
-  deps:
+  rtl-gen-deps:
     description: "Install base toolchain (Java, sbt, Python, build tools)"
     dependencies: []
     steps:
@@ -33,7 +33,7 @@ tasks:
 
   rtl-gen:
     description: "Generate VexRiscv RTL via SpinalHDL"
-    dependencies: [deps]
+    dependencies: [rtl-gen-deps]
     steps:
       - name: "Check VexRiscv directory"
         command: "[ -d 'rtl/VexRiscv' ]"
@@ -42,25 +42,9 @@ tasks:
       - name: "Generate RTL"
         command: "cd rtl/VexRiscv && sbt 'runMain vexriscv.demo.GenFull'"
 
-  whisper:
-    description: "Build Tenstorrent Whisper simulator"
-    dependencies: [deps]
-    steps:
-      - name: "Install dependencies"
-        command: "true"
-        actions:
-          - "sudo apt-get install -y g++-11 build-essential libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev"
-
-      - name: "Check Whisper directory"
-        command: "[ -d 'tools/whisper' ]"
-        on_failure: "echo '[ERROR] tools/whisper not found. Run: git submodule update --init --recursive' && exit 1"
-
-      - name: "Build Whisper"
-        command: "cd tools/whisper && make BOOST_DIR=/usr"
-
-  riscv-dv:
+  riscv-dv-deps:
     description: "Install ChipsAlliance RISC-V DV framework"
-    dependencies: [deps]
+    dependencies: []
     steps:
       - name: "Check RISC-V DV directory"
         command: "[ -d 'tools/riscv-dv' ]"
@@ -74,7 +58,7 @@ tasks:
 
   riscv-dv-gen:
     description: "Generate random RISC-V DV instruction tests"
-    dependencies: [riscv-dv]
+    dependencies: [riscv-dv-deps]
     steps:
       - name: "Check RISC-V DV directory"
         command: "[ -d 'tools/riscv-dv' ]"
@@ -82,6 +66,22 @@ tasks:
 
       - name: "Generate tests"
         command: "cd tools/riscv-dv && run --test riscv_rand_instr_test --iterations 50 --output ../../tests/generated"
+
+  whisper:
+    description: "Build Tenstorrent Whisper simulator"
+    dependencies: []
+    steps:
+      - name: "Install dependencies"
+        command: "true"
+        actions:
+          - "sudo apt-get install -y g++-11 build-essential libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev"
+
+      - name: "Check Whisper directory"
+        command: "[ -d 'tools/whisper' ]"
+        on_failure: "echo '[ERROR] tools/whisper not found. Run: git submodule update --init --recursive' && exit 1"
+
+      - name: "Build Whisper"
+        command: "cd tools/whisper && make BOOST_DIR=/usr"
 
   style-check:
     description: "Run Verilog style checks using Verible"
@@ -105,7 +105,7 @@ tasks:
         command: "[ -d 'tools/whisper/build-Linux' ] && rm -rf tools/whisper/build-Linux || true"
 
       - name: "Clean tests"
-        command: "[ -d 'tests/generated' ] && rm -rf tests/generated || true"
+        command: "[ -d 'regression/testcases/generated' ] && rm -rf regression/testcases/generated || true"
 
   check:
     description: "Show current toolchain versions"
@@ -130,6 +130,6 @@ tasks:
         command: "dpkg -l 2>/dev/null | grep libboost | head -n 1 || echo 'Boost missing'"
 
   all:
-    description: "Run full build pipeline (deps + rtl-gen)"
-    dependencies: [deps, rtl-gen]
+    description: "Run full build pipeline"
+    dependencies: []
     steps: []
