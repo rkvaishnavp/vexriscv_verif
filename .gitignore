@@ -1,0 +1,121 @@
+# ==========================================================
+# VexRiscv Verification Framework - .gitignore
+# Author: Vaishnav RKV
+# Updated: 2025-11-08
+# ==========================================================
+
+# ----------------------------------------
+# OS / Editor / Environment
+# ----------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+*.lock
+*.pyc
+__pycache__/
+.vscode/
+.idea/
+*.iml
+
+# ----------------------------------------
+# Build and Generated Artifacts
+# ----------------------------------------
+/build/
+/out/
+/output/
+/logs/
+/results/
+/reports/
+/tmp/
+/generated/
+/obj_dir/
+/simv*
+*.vcd
+*.fst
+*.wlf
+*.ucdb
+*.ini
+*.jou
+*.pb
+*.rpt
+*.dmp
+
+# ----------------------------------------
+# RISC-V DV Generated Files
+# ----------------------------------------
+/tests/generated/
+/tools/riscv-dv/.pytest_cache/
+/tools/riscv-dv/__pycache__/
+/tools/riscv-dv/build/
+/tools/riscv-dv/htmlcov/
+/tools/riscv-dv/.coverage
+/tools/riscv-dv/coverage.xml
+/tools/riscv-dv/venv/
+/tools/riscv-dv/*.egg-info
+
+# ----------------------------------------
+# Whisper Build
+# ----------------------------------------
+/tools/whisper/build/
+/tools/whisper/build-Linux/
+/tools/whisper/*.o
+/tools/whisper/*.a
+/tools/whisper/*.so
+/tools/whisper/*.bin
+/tools/whisper/Makefile.local
+
+# ----------------------------------------
+# Questa / ModelSim Simulation Files
+# ----------------------------------------
+transcript
+vsim.wlf
+modelsim.ini
+*.mpf
+*.mti
+work/
+questa_lib/
+mtiUvm/
+*.do
+*.ini
+
+# ----------------------------------------
+# Java / sbt / Scala Build Files
+# ----------------------------------------
+/project/project/
+/project/target/
+/target/
+/rtl/VexRiscv/target/
+/rtl/VexRiscv/project/
+
+# ----------------------------------------
+# Python / Virtualenv / Pip
+# ----------------------------------------
+.venv/
+env/
+venv/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ----------------------------------------
+# License / Cache / Misc
+# ----------------------------------------
+/tools/questasim/license.dat
+*.log
+*.trace
+*.elf
+*.bin
+*.hex
+
+# ----------------------------------------
+# Git metadata
+# ----------------------------------------
+*.orig
+*.rej
+*~

@@ -83,12 +83,18 @@ riscv-dv:
 	@echo "=== [RISCV-DV] Installation complete ==="
 
 # -----------------------------
-# [5] Generate RISC-V DV random tests
+# [5] Generate RISC-V DV random tests (generation only)
 # -----------------------------
 riscv-dv-gen:
 	@echo "=== [RISCV-DV] Generating random instruction tests ==="
 	@if [ -d "tools/riscv-dv" ]; then \
-		cd tools/riscv-dv && run --test riscv_rand_instr_test --iterations 50 --output ../../tests/generated; \
+		cd tools/riscv-dv && \
+		python3 run.py \
+			--test riscv_rand_instr_test \
+			--iterations 50 \
+			--output ../../regression/tests/generated \
+			-si "questa" \
+			--steps gen; \
 	else \
 		echo "[ERROR] tools/riscv-dv not found."; \
 		exit 1; \
