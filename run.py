@@ -1,81 +1,50 @@
 #!/usr/bin/env python3
 """
-VexRiscv Verification Framework - Build System
-Executes tasks defined in build_config.yaml
-Author: Vaishnav RKV
+VexRiscv Build System (YAML-driven Makefile replacement)
+Author: Vaishnav Prasad R K
+Date: 2025-11-12
 """
 
 import argparse
-import sys
 import subprocess
-import yaml
+import sys
 import os
-from pathlib import Path
-from typing import Dict, List, Any, Set
+import yaml
 from collections import deque
+from typing import Dict, Any, List
 
 
-class BuildSystem:
-    """Manages task execution and dependency resolution"""
-
-    def __init__(self, config_file: str = "build_config.yaml"):
+class BuildRunner:
+    def __init__(self, config_file="build_config.yaml"):
         self.config_file = config_file
         self.config = self._load_config()
         self.tasks = self.config.get("tasks", {})
         self.executed = set()
-        self.failed = set()
 
     def _load_config(self) -> Dict[str, Any]:
-        """Load YAML configuration"""
         if not os.path.exists(self.config_file):
-            print(f"[ERROR] Config file not found: {self.config_file}")
+            print(f"[ERROR] Config file '{self.config_file}' not found.")
             sys.exit(1)
-
-        try:
-            with open(self.config_file, "r") as f:
-                return yaml.safe_load(f)
-        except yaml.YAMLError as e:
-            print(f"[ERROR] Failed to parse YAML: {e}")
-            sys.exit(1)
+        with open(self.config_file, "r") as f:
+            return yaml.safe_load(f)
 
     def _print_header(self, title: str):
-        """Print formatted header"""
-        print(f"\n{'='*60}")
-        print(f"  {title}")
-        print(f"{'='*60}\n")
+        print(f"\n{'='*60}\n{title}\n{'='*60}")
 
-    def _print_task_header(self, task_name: str, description: str):
-        """Print task header"""
-        print(f"\n[Task: {task_name}] {description}")
-        print("-" * 60)
-
-    def _run_command(self, command: str, step_name: str = "") -> bool:
-        """Execute shell command and return success status"""
-        if step_name:
-            print(f"  → {step_name}")
-
+    def _run_command(self, cmd: str) -> bool:
         try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                executable="/bin/bash",
-                capture_output=False
-            )
+            result = subprocess.run(cmd, shell=True, executable="/bin/bash")
             return result.returncode == 0
+        except KeyboardInterrupt:
+            print("\n[ABORTED] User interrupted.")
+            sys.exit(1)
         except Exception as e:
-            print(f"[ERROR] Command execution failed: {e}")
+            print(f"[ERROR] Command failed: {e}")
             return False
 
     def _resolve_dependencies(self, task_name: str) -> List[str]:
-        """Resolve task dependencies using topological sort"""
-        if task_name not in self.tasks:
-            print(f"[ERROR] Task not found: {task_name}")
-            return []
-
-        visited = set()
-        order = []
+        visited, order = set(), []
         stack = deque([task_name])
-
         while stack:
             current = stack[-1]
             if current in visited:
@@ -83,183 +52,98 @@ class BuildSystem:
                 if current not in order:
                     order.append(current)
                 continue
-
             visited.add(current)
-            task = self.tasks.get(current, {})
-            deps = task.get("dependencies", [])
-
+            deps = self.tasks.get(current, {}).get("dependencies", [])
             for dep in reversed(deps):
                 if dep not in visited:
                     stack.append(dep)
-
         return order
 
     def _execute_task(self, task_name: str) -> bool:
-        """Execute a single task"""
         if task_name in self.executed:
             print(f"[SKIP] {task_name} already executed")
             return True
 
-        if task_name in self.failed:
-            print(f"[ERROR] {task_name} previously failed, skipping")
-            return False
-
         if task_name not in self.tasks:
-            print(f"[ERROR] Task not found: {task_name}")
+            print(f"[ERROR] Unknown task: {task_name}")
             return False
 
         task = self.tasks[task_name]
-        description = task.get("description", "")
-        steps = task.get("steps", [])
+        desc = task.get("description", "")
+        print(f"\n[Task: {task_name}] {desc}")
+        print("-" * 60)
 
-        self._print_task_header(task_name, description)
-
-        # Execute all steps in order
-        for step in steps:
-            step_name = step.get("name", "")
-            command = step.get("command")
+        for step in task.get("steps", []):
+            step_name = step.get("name", "Unnamed Step")
+            cmd = step.get("command")
             on_success = step.get("on_success")
             on_failure = step.get("on_failure")
-            actions = step.get("actions", [])
 
-            # Handle conditional checks
-            if command:
-                if not self._run_command(command, step_name):
-                    if on_failure:
-                        print(f"  ⚠ Condition failed, executing fallback...")
-                        if not self._run_command(on_failure):
-                            print(f"[ERROR] Step '{step_name}' failed")
-                            self.failed.add(task_name)
-                            return False
-                    continue
-                else:
-                    if on_success:
-                        self._run_command(on_success)
-            else:
-                # Execute all actions in the step
-                for action in actions:
-                    if not self._run_command(action, step_name):
-                        print(f"[ERROR] Action failed: {action}")
-                        self.failed.add(task_name)
+            print(f"→ {step_name}")
+            if cmd and not self._run_command(cmd):
+                if on_failure:
+                    print("  ⚠ Condition failed, running on_failure...")
+                    if not self._run_command(on_failure):
+                        print(f"[ERROR] Step failed: {step_name}")
                         return False
+                else:
+                    print(f"[ERROR] Step failed: {step_name}")
+                    return False
+            elif on_success:
+                self._run_command(on_success)
 
-        print(f"\n[SUCCESS] {task_name} completed\n")
+        print(f"[SUCCESS] {task_name} complete\n")
         self.executed.add(task_name)
         return True
 
-    def run_task(self, task_name: str) -> bool:
-        """Run a task with all its dependencies"""
-        print("\n")
-        self._print_header(f"Build Task: {task_name}")
-
-        # Resolve and execute dependencies
-        order = self._resolve_dependencies(task_name)
-
-        if not order:
-            print(f"[ERROR] Failed to resolve dependencies for: {task_name}")
+    def run(self, task_name: str):
+        if task_name not in self.tasks:
+            print(f"[ERROR] No such task: {task_name}")
             return False
 
-        print(f"[INFO] Execution order: {' → '.join(order)}\n")
+        self._print_header(f"Executing: {task_name}")
+        order = self._resolve_dependencies(task_name)
+        print(f"[INFO] Execution order: {' → '.join(order)}")
 
-        for task in order:
-            if not self._execute_task(task):
-                print(f"\n[FAILED] Build stopped at task: {task}")
+        for t in order:
+            if not self._execute_task(t):
+                print(f"[FAILED] Build stopped at {t}")
                 return False
-
-        self._print_header("Build Complete!")
-        print(f"[SUCCESS] All tasks completed successfully\n")
         return True
 
     def list_tasks(self):
-        """List all available tasks"""
         self._print_header("Available Tasks")
-        for task_name, task_info in self.tasks.items():
-            description = task_info.get("description", "No description")
-            deps = task_info.get("dependencies", [])
-            deps_str = f" (depends on: {', '.join(deps)})" if deps else ""
-            print(f"  • {task_name:20} - {description}{deps_str}")
-        print()
-
-    def show_task_details(self, task_name: str):
-        """Show detailed information about a task"""
-        if task_name not in self.tasks:
-            print(f"[ERROR] Task not found: {task_name}")
-            return
-
-        task = self.tasks[task_name]
-        self._print_header(f"Task Details: {task_name}")
-        print(f"Description: {task.get('description', 'N/A')}")
-        print(f"Dependencies: {', '.join(task.get('dependencies', [])) or 'None'}")
-        print(f"\nSteps:")
-
-        for i, step in enumerate(task.get("steps", []), 1):
-            print(f"  {i}. {step.get('name', 'Unknown')}")
-            if step.get("command"):
-                print(f"     Command: {step['command']}")
-            if step.get("actions"):
-                for action in step["actions"]:
-                    print(f"     Action: {action}")
+        for t, info in self.tasks.items():
+            print(f"  {t:15} - {info.get('description', '')}")
         print()
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="VexRiscv Verification Framework Build System",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python3 build.py deps              # Install dependencies
-  python3 build.py whisper           # Build Whisper with dependencies
-  python3 build.py all               # Run full build pipeline
-  python3 build.py --list            # Show all available tasks
-  python3 build.py --info riscv-dv   # Show task details
-  python3 build.py clean             # Clean build artifacts
-        """
-    )
-
-    parser.add_argument(
-        "task",
-        nargs="?",
-        help="Task name to execute"
-    )
-    parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List all available tasks"
-    )
-    parser.add_argument(
-        "--info",
-        metavar="TASK",
-        help="Show detailed information about a task"
-    )
-    parser.add_argument(
-        "--config",
-        default="build_config.yaml",
-        help="Path to build configuration file (default: build_config.yaml)"
-    )
-
+    parser = argparse.ArgumentParser(description="VexRiscv YAML Build Runner")
+    parser.add_argument("tasks", nargs="*", help="One or more task names to execute")
+    parser.add_argument("--list", action="store_true", help="List all tasks")
+    parser.add_argument("--config", default="build_config.yaml", help="Path to YAML config")
     args = parser.parse_args()
 
-    # Initialize build system
-    build = BuildSystem(args.config)
+    runner = BuildRunner(args.config)
 
-    # Handle different modes
     if args.list:
-        build.list_tasks()
-        return 0
+        runner.list_tasks()
+        return
 
-    if args.info:
-        build.show_task_details(args.info)
-        return 0
-
-    if not args.task:
+    if not args.tasks:
         parser.print_help()
-        return 1
+        return
 
-    # Execute task
-    success = build.run_task(args.task)
-    return 0 if success else 1
+    # Run tasks sequentially
+    for task in args.tasks:
+        success = runner.run(task)
+        if not success:
+            print(f"[BUILD FAILED] at task: {task}")
+            sys.exit(1)
+
+    print("\n✅ All tasks finished successfully.")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

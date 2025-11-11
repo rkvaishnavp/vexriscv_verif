@@ -1,135 +1,111 @@
----
-# VexRiscv Verification Framework - Build Configuration
+# ---------------------------------------------------------
+# VexRiscv Build Configuration (YAML version of Makefile)
+# ---------------------------------------------------------
 # Author: Vaishnav Prasad R K
-# Updated: 2025-11-01
+# Date: 2025-11-12
 
 project:
-  name: VexRiscv Verification Framework
-  description: Verification Framework for Verification of VexRiscv using Whisper and RISC-V DV
+  name: VexRiscv Verification Build
+  description: Automated build system mirroring original Makefile flow
 
 tasks:
-  rtl-gen-deps:
-    description: "Install base toolchain (Java, sbt, Python, build tools)"
+  deps:
+    description: "Check and install Java, sbt, Python3, and base build tools"
     dependencies: []
     steps:
       - name: "Check Java 8"
         command: "command -v java >/dev/null 2>&1 && java -version 2>&1 | grep -q '1\\.8'"
         on_success: "echo '[OK] Java 8 already installed.'"
-        on_failure: "sudo apt-get update -qq && sudo apt-get install -y openjdk-8-jdk"
+        on_failure: |
+          echo '[INFO] Installing OpenJDK 8...' && \
+          sudo apt-get update -qq && sudo apt-get install -y openjdk-8-jdk
 
       - name: "Check sbt"
         command: "command -v sbt >/dev/null 2>&1"
         on_success: "echo '[OK] sbt already installed.'"
         on_failure: |
+          echo '[INFO] Installing sbt...' && \
           sudo apt-get install -y curl apt-transport-https gnupg && \
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list && \
-          curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo apt-key add - && \
+          echo 'deb https://repo.scala-sbt.org/scalasbt/debian all main' | sudo tee /etc/apt/sources.list.d/sbt.list && \
+          curl -sL 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823' | sudo apt-key add - && \
           sudo apt-get update -qq && sudo apt-get install -y sbt
 
       - name: "Check Python3"
         command: "command -v python3 >/dev/null 2>&1"
         on_success: "echo '[OK] Python3 installed.'"
-        on_failure: "sudo apt-get install -y python3 python3-pip"
+        on_failure: |
+          echo '[INFO] Installing Python3...' && \
+          sudo apt-get install -y python3 python3-pip
 
   rtl-gen:
-    description: "Generate VexRiscv RTL via SpinalHDL"
-    dependencies: [rtl-gen-deps]
+    description: "Generate VexRiscv RTL"
+    dependencies: [deps]
     steps:
-      - name: "Check VexRiscv directory"
+      - name: "Check RTL directory"
         command: "[ -d 'rtl/VexRiscv' ]"
         on_failure: "echo '[ERROR] rtl/VexRiscv not found. Initialize submodules first.' && exit 1"
 
-      - name: "Generate RTL"
+      - name: "Run sbt RTL generation"
         command: "cd rtl/VexRiscv && sbt 'runMain vexriscv.demo.GenFull'"
 
-  riscv-dv-deps:
-    description: "Install ChipsAlliance RISC-V DV framework"
-    dependencies: []
-    steps:
-      - name: "Check RISC-V DV directory"
-        command: "[ -d 'tools/riscv-dv' ]"
-        on_failure: "echo '[ERROR] tools/riscv-dv not found. Run: git submodule update --init --recursive' && exit 1"
-
-      - name: "Install Python requirements"
-        command: "cd tools/riscv-dv && pip3 install --user -r requirements.txt"
-
-      - name: "Install in editable mode"
-        command: "cd tools/riscv-dv && export PATH=$$HOME/.local/bin:$$PATH && pip3 install --user -e ."
-
-  riscv-dv-gen:
-    description: "Generate random RISC-V DV instruction tests"
-    dependencies: [riscv-dv-deps]
-    steps:
-      - name: "Check RISC-V DV directory"
-        command: "[ -d 'tools/riscv-dv' ]"
-        on_failure: "echo '[ERROR] tools/riscv-dv not found.' && exit 1"
-
-      - name: "Generate tests"
-        command: "cd tools/riscv-dv && run --test riscv_rand_instr_test --iterations 50 --output ../../tests/generated"
-
   whisper:
-    description: "Build Tenstorrent Whisper simulator"
+    description: "Build Tenstorrent Whisper"
     dependencies: []
     steps:
-      - name: "Install dependencies"
-        command: "true"
-        actions:
-          - "sudo apt-get install -y g++-11 build-essential libboost-all-dev gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev"
+      - name: "Install Whisper dependencies"
+        command: |
+          sudo apt-get install -y g++-11 build-essential gcc-riscv64-unknown-elf liblz4-dev libvncserver-dev wget tar
 
       - name: "Check Whisper directory"
         command: "[ -d 'tools/whisper' ]"
         on_failure: "echo '[ERROR] tools/whisper not found. Run: git submodule update --init --recursive' && exit 1"
 
-      - name: "Build Whisper"
-        command: "cd tools/whisper && make BOOST_DIR=/usr"
+      - name: "Download and build Boost"
+        command: |
+          cd tools/whisper && \
+          if [ ! -d 'boost' ]; then \
+            echo '=== [Whisper] Downloading Boost 1.83.0 ==='; \
+            wget -q https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz -O boost_1_83_0.tar.gz; \
+            tar -xzf boost_1_83_0.tar.gz; \
+            mv boost_1_83_0 boost; \
+            rm -f boost_1_83_0.tar.gz; \
+            cd boost; \
+            ./bootstrap.sh --prefix=$(pwd)/install; \
+            ./b2 install --with-system --with-filesystem --with-thread --with-program_options --with-chrono --with-date_time --with-regex -j$(nproc); \
+          else \
+            echo '=== [Whisper] Boost already built, skipping download ==='; \
+          fi
 
-  style-check:
-    description: "Run Verilog style checks using Verible"
+      - name: "Build Whisper"
+        command: "cd tools/whisper && make BOOST_DIR=$(pwd)/boost/install"
+
+  riscv-dv:
+    description: "Set up RISC-V DV verification environment"
+    dependencies: []
+    steps:
+      - name: "Create virtual environment"
+        command: "cd tools/riscv-dv && python3 -m venv .venv"
+
+      - name: "Install dependencies"
+        command: "cd tools/riscv-dv && . .venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
+
+      - name: "Install in editable mode"
+        command: "cd tools/riscv-dv && . .venv/bin/activate && pip install -e ."
+
+  riscv-dv-gen:
+    description: "Generate random instruction tests using RISC-V DV"
     dependencies: [riscv-dv]
     steps:
-      - name: "Check RISC-V DV directory"
+      - name: "Check riscv-dv directory"
         command: "[ -d 'tools/riscv-dv' ]"
         on_failure: "echo '[ERROR] tools/riscv-dv not found.' && exit 1"
 
-      - name: "Run style check"
-        command: "cd tools/riscv-dv/verilog_style && ./build-verible.sh && ./run.sh"
-
-  clean:
-    description: "Remove build artifacts"
-    dependencies: []
-    steps:
-      - name: "Clean VexRiscv"
-        command: "[ -d 'rtl/VexRiscv' ] && cd rtl/VexRiscv && sbt clean || true"
-
-      - name: "Clean Whisper"
-        command: "[ -d 'tools/whisper/build-Linux' ] && rm -rf tools/whisper/build-Linux || true"
-
-      - name: "Clean tests"
-        command: "[ -d 'regression/testcases/generated' ] && rm -rf regression/testcases/generated || true"
-
-  check:
-    description: "Show current toolchain versions"
-    dependencies: []
-    steps:
-      - name: "Java version"
-        command: "java -version 2>&1 | head -n 1 || echo 'Java missing'"
-
-      - name: "sbt version"
-        command: "sbt sbtVersion 2>&1 | head -n 1 || echo 'sbt missing'"
-
-      - name: "Python version"
-        command: "python3 --version || echo 'Python3 missing'"
-
-      - name: "g++ version"
-        command: "g++-11 --version 2>&1 | head -n 1 || echo 'g++-11 missing'"
-
-      - name: "RISC-V GCC version"
-        command: "riscv64-unknown-elf-gcc --version 2>&1 | head -n 1 || echo 'RISC-V GCC missing'"
-
-      - name: "Boost library"
-        command: "dpkg -l 2>/dev/null | grep libboost | head -n 1 || echo 'Boost missing'"
-
-  all:
-    description: "Run full build pipeline"
-    dependencies: []
-    steps: []
+      - name: "Generate random tests"
+        command: |
+          cd tools/riscv-dv && \
+          python3 run.py \
+            --test riscv_rand_instr_test \
+            --iterations 50 \
+            --output ../../regression/testcases/generated \
+            -si 'questa' \
+            --steps gen
