@@ -6,7 +6,7 @@
 [submodule "tools/whisper"]
 	path = tools/whisper
 	url = https://github.com/tenstorrent/whisper.git
-	branch = main
+	branch = master
 
 [submodule "tools/riscv-dv"]
 	path = tools/riscv-dv
