@@ -9,19 +9,19 @@ module tb_top;
   logic reset;
   logic debugReset;
 
-  dBus_if dbus_if (
+  dBus_if dbus (
       .clk  (clk),
       .reset(reset)
   );
-  iBus_if ibus_if (
+  iBus_if ibus (
       .clk  (clk),
       .reset(reset)
   );
-  intrBus_if intrbus_if (
+  intrBus_if intrbus (
       .clk  (clk),
       .reset(reset)
   );
-  debug_if debugbus_if (
+  debugBus_if debugbus (
       .clk  (clk),
       .reset(reset)
   );
@@ -31,10 +31,10 @@ module tb_top;
       .clk(clk),
       .reset(reset),
       .debugReset(debugReset),
-      .dBus(dbus_if.proc),
-      .iBus(ibus_if.proc),
-      .intrBus(intrbus_if.proc),
-      .debugBus(debugbus_if.proc)
+      .dBus(dbus.proc),
+      .iBus(ibus.proc),
+      .intrBus(intrbus.proc),
+      .debugBus(debugbus.proc)
   );
 
   initial begin
@@ -46,10 +46,8 @@ module tb_top;
     $display("Starting Testbench Top Module");
     uvm_config_db#(virtual dBus_if)::set(null, "uvm_test_top.env.dbus_agent*", "vif", dbus_if);
     uvm_config_db#(virtual iBus_if)::set(null, "uvm_test_top.env.ibus_agent*", "vif", ibus_if);
-    uvm_config_db#(virtual intrBus_if.drv)::set(null, "uvm_test_top.env.intr_agent*", "vif",
-                                                intrbus_if);
-    uvm_config_db#(virtual debugBus_if)::set(null, "uvm_test_top.env.debug_agent*", "vif",
-                                             debugbus_if);
+    uvm_config_db#(virtual intrBus_if.drv)::set(null, "uvm_test_top.env.intr_agent*", "vif", intrbus_if);
+    uvm_config_db#(virtual debugBus_if)::set(null, "uvm_test_top.env.debug_agent*", "vif", debugbus_if);
     run_test("VexRiscv_base_test");
     $finish;
   end

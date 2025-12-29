@@ -1,52 +1,40 @@
 VERIF:
-  TB:
-    - verif/tb/tb_top.sv
-  
-  ENV:
-    - verif/env/VexRiscv_env.sv
-    - verif/env/VexRiscv_sbd.sv
-    - verif/env/VexRiscv_cov.sv
-  
   AGENTS:
     DBUS:
-      - verif/agents/dbus_agent/dbus_agent.sv
+      - verif/agents/dbus_agent/dbus_tx.sv
+      - verif/agents/dbus_agent/dbus_sqr.sv
       - verif/agents/dbus_agent/dbus_drv.sv
       - verif/agents/dbus_agent/dbus_mon.sv
-      - verif/agents/dbus_agent/dbus_sqr.sv
-      - verif/agents/dbus_agent/dbus_tx.sv
-    
+      - verif/agents/dbus_agent/dbus_agent.sv
+
     IBUS:
-      - verif/agents/ibus_agent/ibus_agent.sv
+      - verif/agents/ibus_agent/ibus_tx.sv
+      - verif/agents/ibus_agent/ibus_sqr.sv
       - verif/agents/ibus_agent/ibus_drv.sv
       - verif/agents/ibus_agent/ibus_mon.sv
-      - verif/agents/ibus_agent/ibus_sqr.sv
-      - verif/agents/ibus_agent/ibus_tx.sv
-    
-    DEBUG:
-      - verif/agents/debug_agent/debug_agent.sv
-      - verif/agents/debug_agent/debug_drv.sv
-      - verif/agents/debug_agent/debug_mon.sv
-      - verif/agents/debug_agent/debug_sqr.sv
-      - verif/agents/debug_agent/debug_tx.sv
-    
-    INTR:
-      - verif/agents/intr_agent/intr_agent.sv
-      - verif/agents/intr_agent/intr_drv.sv
-      - verif/agents/intr_agent/intr_mon.sv
-      - verif/agents/intr_agent/intr_sqr.sv
-      - verif/agents/intr_agent/intr_tx.sv
-  
-  TESTS:
-    - verif/tests/VexRiscv_base_test.sv
-  
-  TESTPLANS:
-    - verif/testplans/testplan_index.yaml
-    - verif/testplans/arch_testplan.yaml
-    - verif/testplans/compliance_testplan.yaml
-    - verif/testplans/debug_testplan.yaml
-    - verif/testplans/error_injection_testplan.yaml
-    - verif/testplans/integration_testplan.yaml
-    - verif/testplans/interrupt_testplan.yaml
-    - verif/testplans/memory_testplan.yaml
-    - verif/testplans/microarch_testplan.yaml
-    - verif/testplans/performance_testplan.yaml
+      - verif/agents/ibus_agent/ibus_agent.sv
+
+    DEBUGBUS:
+      - verif/agents/debugBus_agent/debugBus_tx.sv
+      - verif/agents/debugBus_agent/debugBus_sqr.sv
+      - verif/agents/debugBus_agent/debugBus_drv.sv
+      - verif/agents/debugBus_agent/debugBus_mon.sv
+      - verif/agents/debugBus_agent/debugBus_agent.sv
+
+    INTRBUS:
+      - verif/agents/intrBus_agent/intrBus_tx.sv
+      - verif/agents/intrBus_agent/intrBus_sqr.sv
+      - verif/agents/intrBus_agent/intrBus_drv.sv
+      - verif/agents/intrBus_agent/intrBus_mon.sv
+      - verif/agents/intrBus_agent/intrBus_agent.sv
+
+  COMMON:
+    - verif/common/VexRiscv_vsqr.sv
+
+  ENV:
+    - verif/env/VexRiscv_cov.sv
+    - verif/env/VexRiscv_sbd.sv
+    - verif/env/VexRiscv_env.sv
+
+  TB:
+    - verif/tb/tb_top.sv

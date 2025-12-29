@@ -1,4 +1,4 @@
-interface debug_if (
+interface debugBus_if (
     input clk,
     input reset
 );
