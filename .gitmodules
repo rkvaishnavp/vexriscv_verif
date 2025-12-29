@@ -1,9 +1,14 @@
 [submodule "rtl/VexRiscv"]
 	path = rtl/VexRiscv
 	url = https://github.com/SpinalHDL/VexRiscv.git
+	branch = master
+
 [submodule "tools/whisper"]
 	path = tools/whisper
 	url = https://github.com/tenstorrent/whisper.git
+	branch = main
+
 [submodule "tools/riscv-dv"]
 	path = tools/riscv-dv
 	url = https://github.com/chipsalliance/riscv-dv.git
+	branch = master
