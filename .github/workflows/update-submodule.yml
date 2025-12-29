@@ -1,32 +1,32 @@
-name: Auto Update VexRiscv Submodule
+name: Auto Update Submodules
 
 on:
   schedule:
-    - cron: "0 0 */3 * *"   # Runs every 3 days at midnight UTC
-  workflow_dispatch:        # Allow manual run from Actions tab
+    - cron: "0 0 */3 * *"   # Every 3 days at 00:00 UTC
+  workflow_dispatch:
 
 jobs:
-  update-submodule:
+  update-submodules:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout main repo with submodules
+      - name: Checkout repository with submodules
         uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update rtl/VexRiscv submodule to latest commit
+      - name: Update all submodules to latest remote commits
         run: |
-          cd rtl/VexRiscv
-          git fetch origin
-          git checkout main || git checkout master || true
-          git pull origin $(git branch --show-current)
-          cd ../../
-          git add rtl/VexRiscv
+          git submodule update --remote --merge
+
+      - name: Commit and push if submodules changed
+        run: |
           if [ -n "$(git status --porcelain)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "Auto-update rtl/VexRiscv submodule to latest"
+            git add .
+            git commit -m "chore(submodule): update all submodules"
             git push
           else
             echo "No submodule updates found."
